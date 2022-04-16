@@ -1,0 +1,14 @@
+# 
+# build subclass tree following generalization relations
+# EXCEPT the leaf nodes (they are deemed to be individuals)
+# 
+PREFIX xmi: <http://www.omg.org/spec/XMI/20131001/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+INSERT {
+    ?parent a owl:Class .
+    ?child rdfs:subClassOf ?parent .
+}  WHERE { 
+     ?child xmi:Generalization ?parent FILTER EXISTS {?grandchild xmi:Generalization ?child} 
+}
+

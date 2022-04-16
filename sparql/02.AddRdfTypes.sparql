@@ -1,0 +1,13 @@
+# 
+# add types to leaf nodes (they are deemed to be individuals)
+# following the Generalization relation
+# 
+PREFIX xmi: <http://www.omg.org/spec/XMI/20131001/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+INSERT {
+    ?child a ?parent .
+    ?parent a owl:Class .
+}  WHERE { 
+     ?child xmi:Generalization ?parent FILTER NOT EXISTS {?grandchild xmi:Generalization ?child} 
+}
