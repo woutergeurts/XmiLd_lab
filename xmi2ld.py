@@ -23,10 +23,9 @@
 # Only tested with xmi as exported by Sparx Enterprise Architect
 # 
 import xml.etree.ElementTree as ET
-import hashlib
 from  LDMap import PropertyMap, URIRefFromString, BindNamespaces, ReadNamespaces, URI2prefix
 
-from rdflib import Graph, Literal, RDF, RDFS, OWL, URIRef, Namespace
+from rdflib import Graph, Literal, RDF, RDFS, URIRef
 g = Graph()
 #
 # elements hold all tags read, dependent on tag, they might be a Relation
@@ -79,7 +78,7 @@ class Element:
             self.text = node.text
 
     def print(self, spaces):
-         print(spaces+"  %s: %s/%s [%s] (%s), attrib=%s" % (self.tag, self.id, self.idref, self.URIRef, self.type, self.attrib))
+        print(spaces+"  %s: %s/%s [%s] (%s), attrib=%s" % (self.tag, self.id, self.idref, self.URIRef, self.type, self.attrib))
 
     def isRelation(self):
         if( self.tag in RelationHash.keys() ):
@@ -103,8 +102,8 @@ def handleModelElement(P,C,propertyMap):
         if( C.label != "no label" ):
             g.add((C.URIRef, RDFS.label, Literal(C.label, lang="nl")))
         for attr_key in C.attrib:
-           attrib = C.attrib[attr_key]
-           propertyMap.addProperty(g, C.URIRef, C.tag, attr_key, attrib)
+            attrib = C.attrib[attr_key]
+            propertyMap.addProperty(g, C.URIRef, C.tag, attr_key, attrib)
         #C.print("DONE: ")
     if( C.hasText ):
         g.add((P.URIRef, RDFS.comment, Literal(C.text, lang="nl")))
@@ -114,11 +113,11 @@ def handleModelElement(P,C,propertyMap):
             URIRefFromString(propertyMap.modelPrefix+C.To)))
 
 def parseModelElement(parent,propertyMap):
-   P = Element(parent)
-   for child in parent:
-      C = Element(child)
-      handleModelElement(P,C,propertyMap)
-      parseModelElement(child,propertyMap)
+    P = Element(parent)
+    for child in parent:
+        C = Element(child)
+        handleModelElement(P,C,propertyMap)
+        parseModelElement(child,propertyMap)
 
 import base64
 docdir = ""
@@ -145,17 +144,16 @@ def unpackDocumentText(docid,document):
 def handleDocument(parentURI, document,propertyMap):
     if( document.text != None ):
         if( 'docid' in document.attrib.keys() ):
-           docid = document.attrib['docid'].replace('{','').replace('}','')
-           g.add((URIRefFromString("document:"+docid), 
-               URIRefFromString("xmi:"+document.tag), parentURI))
-           for attribkey in document.attrib:
-               attrib = document.attrib[attribkey]
-               propertyMap.addProperty(g, URIRefFromString("document:"+docid), 
-                       document.tag, attribkey, document.attrib)
-           unpackDocumentText(docid, document)
+            docid = document.attrib['docid'].replace('{','').replace('}','')
+            g.add((URIRefFromString("document:"+docid), 
+                URIRefFromString("xmi:"+document.tag), parentURI))
+            for attribkey in document.attrib:
+                propertyMap.addProperty(g, URIRefFromString("document:"+docid), 
+                   document.tag, attribkey, document.attrib)
+            unpackDocumentText(docid, document)
         else:
-           print("DOCID UNDEF")
-           docid = "DOCID undef"
+            print("DOCID UNDEF")
+            docid = "DOCID undef"
 
     else:
         print("DOCUMENT EMPTY", document.attrib)
@@ -188,14 +186,14 @@ class ProfileElement:
                 self.Object = Literal(self.value)
             else:
                 if( self.tag[0:6] != "mofext" ):
-                   print("ERROR: extra arguments")
+                    print("ERROR: extra arguments")
 
     def print(self):
         print("ProfileElement[%s] -> [%s] -> [%s]" % (self.id, self.tag, self.value))
 
     def add(self,g):
         if( self.tag[0:6] != "mofext" ):
-           g.add((URIRefFromString(self.id), self.Predicate, self.Object))
+            g.add((URIRefFromString(self.id), self.Predicate, self.Object))
 
 def handleProfiledata(pd,propertyMap):
     P = ProfileElement(pd)
@@ -203,36 +201,34 @@ def handleProfiledata(pd,propertyMap):
     P.add(g)
 
 def parseXML(tree,propertyMap):
-   root = tree.getroot()
-   for section in root:
-       Section = Element(section)
-       print("  section: [%s]" % Section.tag, end=" ")
-       if(Section.tag[0:4] == "uml:"):
-           print("processing ...")
-           for child in section:
-              C = Element(child)
-              handleModelElement(Section,C,propertyMap)
-              parseModelElement(child,propertyMap)
-       elif(Section.tag == "xmi:Extension"):
-           print("processing ...")
-           for subsection in section:
-              SubSection = Element(subsection)
-              for element in subsection:
-                 E = Element(element)
-                 g.add((E.URIRef, RDF.type, E.typeURIRef))
-                 if( E.label != "no label" ):
-                     g.add((E.URIRef, RDFS.label, Literal(E.label, lang="nl")))
-                 handleExtensionItem(element,propertyMap)
-       elif(Section.tag == "xmi:Documentation"):
-           print("skip")
-       else:
-           handleProfiledata(section,propertyMap)
+    root = tree.getroot()
+    for section in root:
+        Section = Element(section)
+        print("  section: [%s]" % Section.tag, end=" ")
+        if(Section.tag[0:4] == "uml:"):
+            print("processing ...")
+            for child in section:
+                C = Element(child)
+                handleModelElement(Section,C,propertyMap)
+                parseModelElement(child,propertyMap)
+        elif(Section.tag == "xmi:Extension"):
+            print("processing ...")
+            for subsection in section:
+                for element in subsection:
+                    E = Element(element)
+                    g.add((E.URIRef, RDF.type, E.typeURIRef))
+                    if( E.label != "no label" ):
+                        g.add((E.URIRef, RDFS.label, Literal(E.label, lang="nl")))
+                    handleExtensionItem(element,propertyMap)
+        elif(Section.tag == "xmi:Documentation"):
+            print("skip")
+        else:
+            handleProfiledata(section,propertyMap)
 
 #
 # after processing
 #
 import os
-import pathlib
 def run_sparqls(graph, sparqldir):
     #
     # you can enforce seqence with numbering
@@ -250,35 +246,35 @@ def run_sparqls(graph, sparqldir):
             print( "run_sparqls: skip %s"% sparqlfile)
 
 if __name__ == "__main__":
-     import sys
-     import getopt
-     argv = sys.argv[1:]
-     opts, args = getopt.getopt(argv, 'p:o:i:s:' )
-     xmifile = "test.xmi"
-     ttlfile = "test.ttl"
-     modelprefix = "test:"
-     sparqldir = "sparql"
-     docdir = "tmpdoc"
-     for (opt, value) in opts:
-         if opt == "-i": 
+    import sys
+    import getopt
+    argv = sys.argv[1:]
+    opts, args = getopt.getopt(argv, 'p:o:i:s:' )
+    xmifile = "test.xmi"
+    ttlfile = "test.ttl"
+    modelprefix = "test:"
+    sparqldir = "sparql"
+    docdir = "tmpdoc"
+    for (opt, value) in opts:
+        if opt == "-i": 
             xmifile = value
-         if opt == "-o": 
+        if opt == "-o": 
             ttlfile = value
-         if opt == "-p": 
+        if opt == "-p": 
             modelprefix = value
-         if opt == "-s": 
+        if opt == "-s": 
             sparqldir = value
-         if opt == "-d": 
+        if opt == "-d": 
             docdir = value
 
-     print("Convert %s to %s with modelprefix [%s] docdir=%s" % (xmifile, ttlfile, modelprefix, docdir))
-     ReadNamespaces(xmifile)
-     tree = ET.ElementTree(file=xmifile)
-     BindNamespaces(g, tree.getroot())
-     propertyMap = PropertyMap(modelprefix)
-     parseXML(tree,propertyMap)
-     propertyMap.toGraph(g)
-     run_sparqls(g, sparqldir)
+    print("Convert %s to %s with modelprefix [%s] docdir=%s" % (xmifile, ttlfile, modelprefix, docdir))
+    ReadNamespaces(xmifile)
+    tree = ET.ElementTree(file=xmifile)
+    BindNamespaces(g, tree.getroot())
+    propertyMap = PropertyMap(modelprefix)
+    parseXML(tree,propertyMap)
+    propertyMap.toGraph(g)
+    run_sparqls(g, sparqldir)
 
-     with open(ttlfile, "w") as f:
+    with open(ttlfile, "w") as f:
         g.print(out=f) 

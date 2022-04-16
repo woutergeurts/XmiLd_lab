@@ -2,8 +2,6 @@
 # Goal of this module:
 # Hide all namespace jugling
 #
-import xml.etree.cElementTree as ET
-
 from rdflib import XSD, Literal, XSD, RDF, RDFS, OWL, URIRef, Namespace
 
 ns_dict = {}
@@ -18,17 +16,17 @@ def ReadNamespaces(file):
     # use cp1252 (windows-1252)
     with open(file,"r",encoding="cp1252") as xml:
         while(True):
-           line=xml.readline()
-           line = line[:-2] # pragmatic way to strip last 2 chars
-           fields = line.split(' ')
-           if( fields[0] == "<xmi:XMI" ):
-              #bug report: xmi:version is not parsed well. check xmlns: prefix with re
-              for field in fields[1:]:
-                  prefix, iri = field.split("=")
-                  prefix = prefix[6:] # get rid of 'xmlns:' 
-                  iri = iri.replace('"','')
-                  ns_dict[prefix] = { "prefix": "%s:"%prefix, "IRI": "%s/"%iri }
-              return
+            line=xml.readline()
+            line = line[:-2] # pragmatic way to strip last 2 chars
+            fields = line.split(' ')
+            if( fields[0] == "<xmi:XMI" ):
+                #bug report: xmi:version is not parsed well. check xmlns: prefix with re
+                for field in fields[1:]:
+                    prefix, iri = field.split("=")
+                    prefix = prefix[6:] # get rid of 'xmlns:' 
+                    iri = iri.replace('"','')
+                    ns_dict[prefix] = { "prefix": "%s:"%prefix, "IRI": "%s/"%iri }
+                return
 
 def BindNamespaces(g, root):
     for ns in ns_dict:
@@ -273,7 +271,7 @@ class PropertyMap:
         elif( ldmap['subjectType'] == 'MultiModelObject' ):
             objects = attrib.split(' ')
             for obj in objects:
-               g.add((subjectURI, URIRefFromString(ldmap['predicateURI']), 
+                g.add((subjectURI, URIRefFromString(ldmap['predicateURI']), 
                    URIRefFromString(self.modelPrefix+obj)))
 
     def toGraph(self, g):
