@@ -225,25 +225,7 @@ def parseXML(tree,propertyMap):
         else:
             handleProfiledata(section,propertyMap)
 
-#
-# after processing
-#
-import os
-def run_sparqls(graph, sparqldir):
-    #
-    # you can enforce seqence with numbering
-    #
-    sparql_list = os.listdir(sparqldir)
-    sparql_list.sort()
-    for sparqlfile in sparql_list:
-        ext = os.path.splitext(sparqlfile)[1]
-        if( ext == ".sparql" ):
-            with open("%s/%s" % (sparqldir,sparqlfile), "r") as f:
-                print( "run_sparqls: run %s"% sparqlfile)
-                query = f.read()
-                graph.update(query)
-        else:
-            print( "run_sparqls: skip %s"% sparqlfile)
+from LDSparql import Sparql
 
 if __name__ == "__main__":
     import sys
@@ -274,7 +256,8 @@ if __name__ == "__main__":
     propertyMap = PropertyMap(modelprefix)
     parseXML(tree,propertyMap)
     propertyMap.toGraph(g)
-    run_sparqls(g, sparqldir)
+    ldSparql = Sparql(sparqldir)
+    ldSparql.run_all(g)
 
     with open(ttlfile, "w") as f:
         g.print(out=f) 
